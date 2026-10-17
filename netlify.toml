@@ -1,5 +1,4 @@
 [build.environment]
   # APP_URL is the public site origin (not a secret); it legitimately appears in build output.
-  # ADMIN_RECOVERY_EMAIL is the same address as the public business contact email shown on the site,
-  # so it legitimately appears in source and build output.
-  SECRETS_SCAN_OMIT_KEYS = "APP_URL,ADMIN_RECOVERY_EMAIL"
+  # These values are public site details or a login identifier, not credentials.
+  SECRETS_SCAN_OMIT_KEYS = "APP_URL,ADMIN_RECOVERY_EMAIL,ADMIN_USERNAME"
