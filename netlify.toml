@@ -1,0 +1,3 @@
+[build.environment]
+  # APP_URL is the public site origin (not a secret); it legitimately appears in build output.
+  SECRETS_SCAN_OMIT_KEYS = "APP_URL"
