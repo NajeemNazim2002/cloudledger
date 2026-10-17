@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum EnquiryType {
+  SERVICE
+  COURSE
+  GENERAL
+}
+
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+model Enquiry {
+  id        String        @id @default(cuid())
+  type      EnquiryType
+  fullName  String
+  email     String
+  phone     String
+  topic     String?
+  message   String
+  status    EnquiryStatus @default(NEW)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  history   EnquiryStatusHistory[]
+
+  @@index([type, status])
+  @@index([createdAt])
+}
+
+model EnquiryStatusHistory {
+  id        String        @id @default(cuid())
+  enquiryId String
+  status    EnquiryStatus
+  changedAt DateTime      @default(now())
+  enquiry   Enquiry       @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+
+  @@index([enquiryId, changedAt])
+}
+
+model Course {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  level          String
+  description    String
+  duration       String   @default("Contact us for details")
+  deliveryMethod String   @default("Contact us for details")
+  price          String   @default("Contact us for pricing")
+  isPublished    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([isPublished, title])
+}
+
+model AccountingService {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  icon        String   @default("BookOpen")
+  title       String
+  description String
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished, title])
+}
+
+model Faq {
+  id          String   @id @default(cuid())
+  question    String
+  answer      String
+  isPublished Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished, sortOrder])
+}
+
+model Testimonial {
+  id          String   @id @default(cuid())
+  quote       String
+  author      String
+  role        String   @default("")
+  company     String   @default("")
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished, createdAt])
+}
+
+model SiteSettings {
+  id             String   @id @default("main")
+  companyName    String   @default("CloudLedger")
+  tagline        String   @default("Cloud Accounting Solutions")
+  email          String   @default("cloudledger78@gmail.com")
+  whatsappDisplay String  @default("+94 705 042 600")
+  whatsappNumber String   @default("94705042600")
+  whatsappMessage String  @default("Hello CloudLedger, I would like to learn more about your accounting services and cloud accounting training.")
+  hours          String   @default("Contact us for business hours")
+  updatedAt      DateTime @updatedAt
+}
+
+model AdminAccount {
+  id                   String    @id @default("main")
+  username             String    @unique
+  passwordHash         String
+  recoveryEmail        String
+  sessionVersion       String
+  resetTokenHash       String?   @unique
+  resetTokenExpiresAt  DateTime?
+  resetRequestedAt     DateTime?
+  updatedAt            DateTime  @updatedAt
+
+  @@index([resetTokenHash, resetTokenExpiresAt])
+}
