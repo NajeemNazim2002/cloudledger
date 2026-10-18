@@ -5,6 +5,7 @@ export type PublicCourse = {
   title: string;
   level: string;
   desc: string;
+  imageUrl?: string | null;
   duration: string;
   deliveryMethod: string;
   price: string;

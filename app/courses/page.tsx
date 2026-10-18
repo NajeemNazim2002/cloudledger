@@ -1,3 +1,4 @@
+import Image from "next/image";
 import EnquiryForm from "@/components/EnquiryForm";
 import { getPublicCourses, getPublicSettings } from "@/lib/public-content";
 
@@ -12,6 +13,16 @@ export default async function Courses() {
       <div className="grid gap-3 md:grid-cols-2">
         {courses.map((c) => (
           <article key={c.slug} className="card">
+            {c.imageUrl && (
+              <Image
+                src={c.imageUrl}
+                alt={c.title}
+                width={800}
+                height={450}
+                unoptimized
+                className="mb-3 aspect-video w-full rounded-xl object-cover"
+              />
+            )}
             <span className="text-xs font-semibold text-violet">{c.level}</span>
             <h2 className="font-semibold text-navy">{c.title}</h2>
             <p className="text-sm">{c.desc}</p>

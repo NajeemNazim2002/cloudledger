@@ -72,7 +72,16 @@ export default function SiteFooter({
         <div>
           <h2 className="font-bold">Follow us</h2>
           <ul className="mt-3 space-y-3 text-sm text-sky-100">
-            <li className="flex items-center gap-2"><Linkedin size={17} aria-hidden="true" />LinkedIn <span className="text-xs text-sky-300">Coming soon</span></li>
+            <li>
+              <a
+                className="flex items-center gap-2 hover:text-white"
+                href="https://www.linkedin.com/company/cloud-ledger94/home/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Linkedin size={17} aria-hidden="true" />LinkedIn
+              </a>
+            </li>
             <li>
               <a
                 className="flex items-center gap-2 hover:text-white"

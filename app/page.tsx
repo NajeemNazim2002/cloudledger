@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, GraduationCap } from "lucide-react";
 import Icon from "@/components/Icon";
@@ -51,6 +52,16 @@ export default async function Home() {
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           {courses.map((c) => (
             <div key={c.slug} className="rounded-2xl bg-white/10 p-4">
+              {c.imageUrl && (
+                <Image
+                  src={c.imageUrl}
+                  alt={c.title}
+                  width={800}
+                  height={450}
+                  unoptimized
+                  className="mb-3 aspect-video w-full rounded-xl object-cover"
+                />
+              )}
               <div className="flex items-center gap-2 text-sky-300"><GraduationCap size={18} /><span className="text-xs">{c.level}</span></div>
               <h3 className="mt-1 font-semibold">{c.title}</h3>
               <p className="text-sm text-sky-100">{c.desc}</p>

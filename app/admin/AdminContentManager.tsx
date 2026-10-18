@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 export type ContentItem = {
@@ -8,7 +9,7 @@ export type ContentItem = {
 };
 
 type Resource = "courses" | "services" | "faqs" | "testimonials" | "settings";
-type Field = { name: string; label: string; type?: "text" | "email" | "textarea" | "checkbox" | "number" };
+type Field = { name: string; label: string; type?: "text" | "email" | "textarea" | "checkbox" | "number" | "image" };
 
 const resourceFields: Record<Resource, Field[]> = {
   courses: [
@@ -16,6 +17,7 @@ const resourceFields: Record<Resource, Field[]> = {
     { name: "title", label: "Course title" },
     { name: "level", label: "Level" },
     { name: "description", label: "Description", type: "textarea" },
+    { name: "imageUrl", label: "Course image", type: "image" },
     { name: "duration", label: "Duration" },
     { name: "deliveryMethod", label: "Delivery method" },
     { name: "price", label: "Price" },
@@ -58,6 +60,7 @@ const defaults: Record<Resource, Record<string, string | number | boolean>> = {
     title: "",
     level: "Beginner",
     description: "",
+    imageUrl: "",
     duration: "Contact us for details",
     deliveryMethod: "Contact us for details",
     price: "Contact us for pricing",
@@ -102,13 +105,33 @@ export default function AdminContentManager({
     setBusy(true);
     const form = new FormData(event.currentTarget);
     const body: Record<string, unknown> = {};
-    for (const field of fields) {
-      if (field.type === "checkbox") body[field.name] = form.get(field.name) === "on";
-      else if (field.type === "number") body[field.name] = Number(form.get(field.name));
-      else body[field.name] = form.get(field.name) ?? "";
-    }
-
     try {
+      for (const field of fields) {
+        if (field.type === "checkbox") body[field.name] = form.get(field.name) === "on";
+        else if (field.type === "number") body[field.name] = Number(form.get(field.name));
+        else if (field.type === "image") {
+          const imageFile = form.get("imageFile");
+          const imageUrl = stringValue(form.get(field.name));
+          if (imageFile instanceof File && imageFile.size > 0) {
+            if (!["image/png", "image/jpeg", "image/webp"].includes(imageFile.type)) {
+              setError("Choose a PNG, JPEG, or WebP course image.");
+              return;
+            }
+            if (imageFile.size > 3 * 1024 * 1024) {
+              setError("Course images must be 3 MB or smaller.");
+              return;
+            }
+            body[field.name] = await fileToDataUrl(imageFile);
+          } else if (imageUrl) {
+            body[field.name] = imageUrl;
+          } else if (form.get("removeImage") === "on") {
+            body[field.name] = "";
+          } else {
+            body[field.name] = stringValue(editing?.[field.name]);
+          }
+        } else body[field.name] = form.get(field.name) ?? "";
+      }
+
       const url = editing?.id
         ? `/api/admin/content/${resource}/${encodeURIComponent(editing.id)}`
         : `/api/admin/content/${resource}`;
@@ -127,8 +150,10 @@ export default function AdminContentManager({
         return [...next, result.item].sort((a, b) => displayTitle(resource, a).localeCompare(displayTitle(resource, b)));
       });
       setEditing(null);
-    } catch {
-      setError("Could not reach the server. Please try again.");
+    } catch (error) {
+      setError(error instanceof Error && error.message === "Could not read the selected image."
+        ? "Could not read the selected image. Please choose another file."
+        : "Could not reach the server. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -260,6 +285,41 @@ export default function AdminContentManager({
 function FieldInput({ field, value }: { field: Field; value: unknown }) {
   const commonClass =
     "mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-brand focus:outline-none";
+  if (field.type === "image") {
+    const imageUrl = stringValue(value);
+    return (
+      <div className="space-y-3 text-sm font-medium text-slate-700 sm:col-span-2">
+        <label className="block">
+          {field.label}
+          <input
+            name={field.name}
+            type="text"
+            defaultValue={imageUrl.startsWith("data:") ? "" : imageUrl}
+            placeholder="Paste an https:// image URL (optional)"
+            className={commonClass}
+          />
+        </label>
+        <label className="block">
+          Or upload an image (PNG, JPEG, or WebP; max 3 MB)
+          <input
+            name="imageFile"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className={`${commonClass} file:mr-3 file:rounded-lg file:border-0 file:bg-mist file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-navy`}
+          />
+        </label>
+        {imageUrl && (
+          <div className="flex items-center gap-3">
+            <Image src={imageUrl} alt="Current course" width={128} height={80} unoptimized className="h-20 w-32 rounded-lg object-cover" />
+            <label className="flex items-center gap-2 text-sm font-normal">
+              <input name="removeImage" type="checkbox" className="h-4 w-4 accent-brand" />
+              Remove current image
+            </label>
+          </div>
+        )}
+      </div>
+    );
+  }
   if (field.type === "checkbox") {
     return (
       <label className="flex items-center gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
@@ -293,6 +353,18 @@ function FieldInput({ field, value }: { field: Field; value: unknown }) {
 
 function stringValue(value: unknown) {
   return typeof value === "string" ? value : "";
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("Could not read the selected image."));
+    });
+    reader.addEventListener("error", () => reject(new Error("Could not read the selected image.")));
+    reader.readAsDataURL(file);
+  });
 }
 
 function displayTitle(resource: Resource, item: ContentItem) {

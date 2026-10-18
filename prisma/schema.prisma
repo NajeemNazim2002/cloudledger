@@ -55,6 +55,7 @@ model Course {
   title          String
   level          String
   description    String
+  imageUrl       String?
   duration       String   @default("Contact us for details")
   deliveryMethod String   @default("Contact us for details")
   price          String   @default("Contact us for pricing")

@@ -8,6 +8,7 @@ const courseSchema = z.object({
   title: z.string().trim().min(2).max(150),
   level: z.string().trim().min(2).max(80),
   description: z.string().trim().min(5).max(3000),
+  imageUrl: z.string().max(4_200_000).refine(isValidCourseImage),
   duration: z.string().trim().min(1).max(100),
   deliveryMethod: z.string().trim().min(1).max(100),
   price: z.string().trim().min(1).max(100),
@@ -113,4 +114,16 @@ function invalidContent() {
 
 function isUniqueConstraintError(error: unknown): error is { code: string } {
   return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
+}
+
+function isValidCourseImage(value: string): boolean {
+  if (!value) return true;
+  if (value.startsWith("/") && !value.startsWith("//")) return true;
+  if (/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value)) return true;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && Boolean(url.hostname);
+  } catch {
+    return false;
+  }
 }

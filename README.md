@@ -23,4 +23,6 @@
 The About page is at `/about`. Replace placeholder team information only with staff names, work history, qualifications, and credentials verified by CloudLedger.
 
 ## Edit content
-Company details, services and courses live in `lib/config.ts`.
+Manage company details, services, and courses from the admin dashboard. Course images can be entered as HTTPS URLs or uploaded as PNG, JPEG, or WebP files up to 3 MB; uploaded images are stored with the course record in the database.
+
+After updating the application, run `npm run db:push` to add the course image field to an existing database.
